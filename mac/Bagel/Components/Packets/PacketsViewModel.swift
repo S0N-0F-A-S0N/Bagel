@@ -59,41 +59,37 @@ class PacketsViewModel: BaseListViewModel<BagelPacket>  {
     }
     
     func filter(items: [BagelPacket]) -> [BagelPacket] {
-        var filteredItems = performAddressFiltration(items)
-        filteredItems = performMethodFiltration(filteredItems)
-        return performStatusFiltration(filteredItems)
-    }
-    
-    func performAddressFiltration(_ items: [BagelPacket])  -> [BagelPacket] {
-        guard addressFilterTerm.count > 0 else {
+        let isAddressFiltering = addressFilterTerm.count > 0
+        let isMethodFiltering = methodFilterTerm.count > 0
+        let isStatusFiltering = statusFilterTerm.count > 0
+        
+        guard isAddressFiltering || isMethodFiltering || isStatusFiltering else {
             return items
         }
         
-        return items.filter {
-            $0.requestInfo?.url?.contains(self.addressFilterTerm) ?? true }
-    }
-    
-    func performMethodFiltration(_ items: [BagelPacket])  -> [BagelPacket] {
-        guard methodFilterTerm.count > 0 else {
-            return items
-        }
+        // Cache lowercased method filter and whitespace checks to avoid O(n) recomputations
+        let lowercasedMethodFilter = isMethodFiltering ? methodFilterTerm.lowercased() : ""
+        let isStatusWhitespaceOnly = isStatusFiltering ? statusFilterTerm.trimmingCharacters(in: .whitespaces).isEmpty : false
         
-        return items.filter
-            { $0.requestInfo?.requestMethod?.rawValue.lowercased()
-                .contains(self.methodFilterTerm.lowercased()) ?? true }
-    }
-    
-    func performStatusFiltration(_ items: [BagelPacket])  -> [BagelPacket] {
-        guard statusFilterTerm.count > 0 else {
-            return items
-        }
-        
-        guard !statusFilterTerm.trimmingCharacters(in: .whitespaces).isEmpty else {
-            return items.filter { $0.requestInfo?.statusCode?.trimmingCharacters(in: .whitespaces).isEmpty ?? true}
-        }
-        
-        return items.filter
-            { $0.requestInfo?.statusCode?.contains(self.statusFilterTerm) ?? false
+        // Combine 3 filter loops into 1 to reduce array allocations and iteration overhead
+        return items.filter { item in
+            if isAddressFiltering {
+                guard item.requestInfo?.url?.contains(self.addressFilterTerm) ?? true else { return false }
+            }
+
+            if isMethodFiltering {
+                guard item.requestInfo?.requestMethod?.rawValue.lowercased().contains(lowercasedMethodFilter) ?? true else { return false }
+            }
+
+            if isStatusFiltering {
+                if isStatusWhitespaceOnly {
+                    guard item.requestInfo?.statusCode?.trimmingCharacters(in: .whitespaces).isEmpty ?? true else { return false }
+                } else {
+                    guard item.requestInfo?.statusCode?.contains(self.statusFilterTerm) ?? false else { return false }
+                }
+            }
+
+            return true
         }
     }
     
