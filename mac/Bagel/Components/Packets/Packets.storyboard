@@ -219,7 +219,7 @@
                                                 <rect key="frame" x="0.0" y="0.0" width="693" height="30"/>
                                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
-                                                    <button translatesAutoresizingMaskIntoConstraints="NO" id="9pa-LD-9G6">
+                                                    <button translatesAutoresizingMaskIntoConstraints="NO" id="9pa-LD-9G6" toolTip="Clear Packets">
                                                         <rect key="frame" x="668" y="8" width="15" height="15"/>
                                                         <constraints>
                                                             <constraint firstAttribute="width" constant="15" id="LdJ-Be-MBZ"/>
